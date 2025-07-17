@@ -1,0 +1,31 @@
+// This block tells Prisma how to connect to your database
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// This block tells Prisma to generate the client
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  companyName String
+  industry    String?
+  size        String?  // "1-10", "11-50", "51-200", "200+"
+  website     String?
+  description String?
+  isVerified  Boolean  @default(false)  // Admin must verify
+  isBlocked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       Int
+  createdAt DateTime @default(now())
+} 
