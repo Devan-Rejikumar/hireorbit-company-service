@@ -15,5 +15,6 @@ router.post('/verify-otp',(req,res)=>companyController.verifyOTP(req,res));
 router.post('/resend-otp',(req,res)=>companyController.resendOTP(req,res));
 router.get("/me", authenticateCompanyJWT, (req, res) => companyController.getMe(req, res));
 router.post('/logout', (req, res) => companyController.logout(req, res));
+router.get('/companies',(req,res)=> companyController.getAllCompanies(req,res))
 
 export default router;

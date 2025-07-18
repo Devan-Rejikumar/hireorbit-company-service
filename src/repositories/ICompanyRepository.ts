@@ -7,4 +7,5 @@ export interface ICompanyRepository{
     saveOTP(email:string,otp:number):Promise<Otp>;
     findOTP(email:string):Promise<Otp|null>;
     deleteOtp(email:string):Promise<void>;
+    getAllCompanies():Promise<Company[]>;
 }

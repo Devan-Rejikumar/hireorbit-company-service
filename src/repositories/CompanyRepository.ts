@@ -36,4 +36,8 @@ export class CompanyRepository implements ICompanyRepository{
             where:{email}
         })
     }
+    async getAllCompanies():Promise<Company[]>{
+        const companies = await prisma.company.findMany();
+        return companies 
+    }
 }

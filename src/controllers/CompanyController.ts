@@ -88,4 +88,12 @@ export class CompanyController{
     res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
     res.json({ message: 'Logged out successfully' });
   }
+  async getAllCompanies(req:Request,res:Response):Promise<void>{
+    try {
+      const companies = await this.companyService.getAllCompanies();
+      res.json(companies)
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch companies" });
+    }
+  }
 }

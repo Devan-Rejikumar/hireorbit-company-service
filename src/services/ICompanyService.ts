@@ -6,4 +6,5 @@ export interface ICompanyService{
     generateOTP(email:string):Promise<{message:string}>
     verifyOTP(email:string,otp:number):Promise<{message:string}>;
     resendOTP(email:string):Promise<{message:string}>;
+    getAllCompanies():Promise<Company[]>;
 }

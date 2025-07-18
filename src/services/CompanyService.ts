@@ -70,4 +70,9 @@ export class CompanyService implements ICompanyService{
     await this.companyRepository.deleteOtp(email);
     return this.generateOTP(email);
   }
+
+  async getAllCompanies(): Promise<Company[]>{
+    const companies = await this.companyRepository.getAllCompanies();
+    return companies;
+  }
 }
