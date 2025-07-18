@@ -1,10 +1,10 @@
 import { Request,Response } from "express";
 import { inject, injectable} from "inversify";
 import TYPES from "../config/types";
-import { CompanyService } from "../services/CompanyService";    
+import { ICompanyService } from "../services/ICompanyService";    
 @injectable()
 export class CompanyController{
-    constructor(@inject(TYPES.CompanyService) private companyService:CompanyService){}
+    constructor(@inject(TYPES.ICompanyService) private companyService:ICompanyService){}
       async register(req: Request, res: Response): Promise<void> {
     try {
         console.log('dddddddddddddd',req.body);

@@ -1,9 +1,10 @@
 import { injectable } from "inversify";
 import {prisma} from '../prisma/client';
 import { Company,Otp } from "@prisma/client"; 
+import { ICompanyRepository } from "./ICompanyRepository";
 
 @injectable()
-export class CompanyRepository{
+export class CompanyRepository implements ICompanyRepository{
     async findByEmail(email:string) :Promise<Company | null>{
         return prisma.company.findUnique({where:{email}});
     }

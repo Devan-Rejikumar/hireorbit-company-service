@@ -3,16 +3,17 @@ import TYPES from '../config/types';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Company } from "@prisma/client";
-import { CompanyRepository } from "../repositories/CompanyRepository";
+import { ICompanyRepository } from "../repositories/ICompanyRepository";
 import { EmailService } from "./EmailService";
+import { ICompanyService } from "./ICompanyService";
 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
 @injectable()
-export class CompanyService{
+export class CompanyService implements ICompanyService{
     constructor(
-        @inject(TYPES.CompanyRepository) private companyRepository:CompanyRepository,
+        @inject(TYPES.ICompanyRepository) private companyRepository:ICompanyRepository,
         @inject(TYPES.EmailService) private emailService:EmailService
         
 ) {}
