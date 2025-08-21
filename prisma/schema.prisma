@@ -1,10 +1,10 @@
-// This block tells Prisma how to connect to your database
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// This block tells Prisma to generate the client
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,13 +14,61 @@ model Company {
   email       String   @unique
   password    String
   companyName String
+  
+ 
   industry    String?
   size        String?  // "1-10", "11-50", "51-200", "200+"
   website     String?
-  description String?
-  isVerified  Boolean  @default(false)  // Admin must verify
+  description String?  @db.Text
+  
+
+  logo        String?  // URL to company logo
+  foundedYear Int?
+  headquarters String? // Main office location
+  phone       String?
+  linkedinUrl String?
+  
+
+  businessType String? 
+  
+
+  contactPersonName  String?
+  contactPersonTitle String? 
+  contactPersonEmail String?
+  contactPersonPhone String?
+  
+
+  profileCompleted Boolean @default(false)
+
+  isVerified  Boolean  @default(false)
   isBlocked   Boolean  @default(false)
+  rejectionReason String?
+  reviewedAt  DateTime?
+  reviewedBy  String? // Admin ID who reviewed
+  
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relation
+  profileStep CompanyProfileStep?
+}
+
+model CompanyProfileStep {
+  id        String   @id @default(uuid())
+  companyId String   @unique
+  
+  // Track completion steps
+  basicInfoCompleted    Boolean @default(false)
+  companyDetailsCompleted Boolean @default(false)
+  contactInfoCompleted  Boolean @default(false)
+  
+  currentStep Int @default(1) // 1=basic, 2=details, 3=contact
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relation
+  company   Company  @relation(fields: [companyId], references: [id])
 }
 
 model Otp {
@@ -28,4 +76,4 @@ model Otp {
   email     String
   otp       Int
   createdAt DateTime @default(now())
-} 
+}

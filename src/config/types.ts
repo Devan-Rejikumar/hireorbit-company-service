@@ -4,7 +4,9 @@ const TYPES = {
     CompanyRepository: Symbol.for("CompanyRepository"),
     ICompanyRepository:Symbol.for("ICompanyRepository"),
     EmailService: Symbol.for("EmailService"),
+    RedisService: Symbol.for("RedisService"),
     CompanyController: Symbol.for("CompanyController"),
+
   };
   
   export default TYPES;
