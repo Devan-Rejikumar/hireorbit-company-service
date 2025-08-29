@@ -29,7 +29,9 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.4",
     "prisma": "^6.11.1",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "shared-dto": "file:../shared-dto",
+    "zod": "^4.1.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

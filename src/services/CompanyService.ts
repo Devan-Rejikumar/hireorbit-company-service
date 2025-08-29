@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt,{JwtPayload} from "jsonwebtoken";
 import TYPES from "../config/types";
 import { ICompanyRepository } from "../repositories/ICompanyRepository";
 import { ICompanyService } from "./ICompanyService";
@@ -10,6 +10,14 @@ import { CompanyProfileData, CompanyRegistrationStep2, CompanyRegistrationStep3,
 import { EmailService } from "./EmailService";
 import { RedisService } from "./RedisService";
 import { PaginationResult } from "../interfaces/IBaseRepository";
+
+interface CompanyTokenPayload extends JwtPayload {
+  userId: string;
+  companyId: string;
+  email: string;
+  role: string;
+  userType: string;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
@@ -41,18 +49,42 @@ export class CompanyService implements ICompanyService {
   async login(
     email: string,
     password: string
-  ): Promise<{ company: Company; companyToken: string }> {
+  ): Promise<{ company: Company; tokens: {accessToken: string; refreshToken : string} }> {
     const company = await this.companyRepository.findByEmail(email);
     if (!company) throw new Error("Invalid credentials");
     const valid = await bcrypt.compare(password, company.password);
     if (!valid) throw new Error("Invalid Credentials");
-    const companyToken = jwt.sign(
-      { userId: company.id, companyId: company.id, email: company.email, role: 'company', userType: 'company' },
-      JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-    return { company, companyToken };
+   const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'>={
+    userId: company.id,
+    companyId : company.id,
+    email : company.email,
+    role: 'company',
+    userType:'company'
+   };
+   const accessToken = jwt.sign(tokenPayload, JWT_SECRET,{expiresIn:"15m"});
+   const refreshToken = jwt.sign(tokenPayload, JWT_SECRET, {expiresIn: '7d'});
+   return {company, tokens:{accessToken,refreshToken}}
   }
+
+ async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+    try {
+      const decoded = jwt.verify(refreshToken, JWT_SECRET) as CompanyTokenPayload;
+      
+      const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
+        userId: decoded.companyId,
+        companyId: decoded.companyId, 
+        email: decoded.email, 
+        role: 'company',
+        userType: 'company'
+      };
+
+      const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
+      return { accessToken: newAccessToken };
+    } catch (error) {
+      throw new Error('Invalid refresh token');
+    }
+  }
+
 
 
   async generateOTP(email: string): Promise<{ message: string; }> {
@@ -220,4 +252,13 @@ export class CompanyService implements ICompanyService {
     }
     return company;
   }
+
+  async logoutWithToken(refreshToken: string): Promise<void> {
+    try {
+      const decoded = jwt.verify(refreshToken, JWT_SECRET) as CompanyTokenPayload;
+      console.log(`Company ${decoded.email} logged out successfully`);
+    } catch (error) {
+      console.log("Invalid company refresh token during logout");
+    }
+}
 }
