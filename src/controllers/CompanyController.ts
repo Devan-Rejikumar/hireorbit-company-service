@@ -45,7 +45,7 @@ async login(req: Request, res: Response): Promise<void> {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 15 * 60 * 1000,  
+      maxAge: 2 * 60 * 60 * 1000,  
     });
     
     res.cookie("companyRefreshToken", result.tokens.refreshToken, {
@@ -80,7 +80,7 @@ async refreshToken(req: Request, res: Response): Promise<void> {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
+      maxAge: 2 * 60 * 60 * 1000,
     });
     
     res.status(HttpStatusCode.OK).json(buildSuccessResponse(null,'Token refreshed successfully'));
@@ -482,6 +482,30 @@ async getCompanyDetailsForAdmin(req: Request, res: Response): Promise<void> {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
       buildErrorResponse(errorMessage, 'Failed to retrieve company details')
+    );
+  }
+}
+
+async getCompanyJobCount(req: Request, res: Response): Promise<void> {
+  try {
+    const companyId: string = req.headers['x-user-id'] as string;
+    
+    if (!companyId) {
+      res.status(AuthStatusCode.COMPANY_NOT_AUTHENTICATED).json(
+        buildErrorResponse('Company not authenticated', 'Authentication required')
+      );
+      return;
+    }
+    
+    const jobCount: number = await this.companyService.getCompanyJobCount(companyId);
+    
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({ count: jobCount }, 'Job count retrieved successfully')
+    );
+  } catch (err) {
+    const errorMessage: string = err instanceof Error ? err.message : 'Unknown error';
+    res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
+      buildErrorResponse(errorMessage, 'Failed to retrieve job count')
     );
   }
 }

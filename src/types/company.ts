@@ -14,6 +14,7 @@ export interface CompanyProfileData {
     contactPersonTitle?: string;
     contactPersonEmail?: string;
     contactPersonPhone?: string;
+    profileCompleted?: boolean;
   }
   
   export interface CompanyProfileStepData {

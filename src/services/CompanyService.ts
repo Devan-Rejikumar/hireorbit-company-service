@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import bcrypt from "bcryptjs";
-import jwt,{JwtPayload} from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import TYPES from "../config/types";
 import { ICompanyRepository } from "../repositories/ICompanyRepository";
 import { ICompanyService } from "./ICompanyService";
@@ -20,6 +20,7 @@ interface CompanyTokenPayload extends JwtPayload {
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "refresh_secret";
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -28,7 +29,7 @@ export class CompanyService implements ICompanyService {
     private companyRepository: ICompanyRepository,
     @inject(TYPES.EmailService) private emailService: IEmailService,
     @inject(TYPES.RedisService) private redisService: RedisService
-  ) {}
+  ) { }
   async register(
     email: string,
     password: string,
@@ -49,36 +50,36 @@ export class CompanyService implements ICompanyService {
   async login(
     email: string,
     password: string
-  ): Promise<{ company: Company; tokens: {accessToken: string; refreshToken : string} }> {
+  ): Promise<{ company: Company; tokens: { accessToken: string; refreshToken: string } }> {
     const company = await this.companyRepository.findByEmail(email);
     if (!company) throw new Error("Invalid credentials");
     const valid = await bcrypt.compare(password, company.password);
     if (!valid) throw new Error("Invalid Credentials");
-   const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'>={
-    userId: company.id,
-    companyId : company.id,
-    email : company.email,
-    role: 'company',
-    userType:'company'
-   };
-   const accessToken = jwt.sign(tokenPayload, JWT_SECRET,{expiresIn:"15m"});
-   const refreshToken = jwt.sign(tokenPayload, JWT_SECRET, {expiresIn: '7d'});
-   return {company, tokens:{accessToken,refreshToken}}
+    const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
+      userId: company.id,
+      companyId: company.id,
+      email: company.email,
+      role: 'company',
+      userType: 'company'
+    };
+    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "2h" });
+    const refreshToken = jwt.sign(tokenPayload, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+    return { company, tokens: { accessToken, refreshToken } }
   }
 
- async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     try {
-      const decoded = jwt.verify(refreshToken, JWT_SECRET) as CompanyTokenPayload;
-      
+      const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as CompanyTokenPayload;
+
       const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
         userId: decoded.companyId,
-        companyId: decoded.companyId, 
-        email: decoded.email, 
+        companyId: decoded.companyId,
+        email: decoded.email,
         role: 'company',
         userType: 'company'
       };
 
-      const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
+      const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '2h' });
       return { accessToken: newAccessToken };
     } catch (error) {
       throw new Error('Invalid refresh token');
@@ -90,15 +91,15 @@ export class CompanyService implements ICompanyService {
   async generateOTP(email: string): Promise<{ message: string; }> {
     try {
       const existingCompany = await this.companyRepository.findByEmail(email)
-      if(existingCompany){
+      if (existingCompany) {
         throw new Error('Company already existing')
       }
       const otp = Math.floor(100000 + Math.random() * 900000);
-      await this.redisService.storeOTP(email, otp.toString(),300);
+      await this.redisService.storeOTP(email, otp.toString(), 300);
       await this.emailService.sendOTP(email, otp)
-      return {message:'OTP send succesfully'}
+      return { message: 'OTP send succesfully' }
     } catch (error) {
-      console.error('Company service generatedOTP error',error);
+      console.error('Company service generatedOTP error', error);
       throw error
     }
   }
@@ -106,14 +107,14 @@ export class CompanyService implements ICompanyService {
 
   async verifyOTP(email: string, otp: number): Promise<{ message: string; }> {
     const storedOtp = await this.redisService.getOTP(email);
-    if(!storedOtp){
+    if (!storedOtp) {
       throw new Error('No OTP found for this email or OTP has expired');
     }
-    if(parseInt(storedOtp)!==otp){
+    if (parseInt(storedOtp) !== otp) {
       throw new Error('Invalid credentials')
     }
     await this.redisService.deleteOTP(email);
-    return {message: 'OTP deleted succesfully'}
+    return { message: 'OTP deleted succesfully' }
   }
 
   async resendOTP(email: string): Promise<{ message: string }> {
@@ -126,14 +127,19 @@ export class CompanyService implements ICompanyService {
     return this.companyRepository.findAll()
   }
 
-    async getAllCompaniesWithPagination(page: number = 1, limit: number = 10): Promise<PaginationResult<Company>> {
-        return this.companyRepository.getAllCompaniesWithPagination(page,limit)
-    }
+  async getAllCompaniesWithPagination(page: number = 1, limit: number = 10): Promise<PaginationResult<Company>> {
+    return this.companyRepository.getAllCompaniesWithPagination(page, limit)
+  }
   async blockCompany(id: string): Promise<void> {
     await this.companyRepository.blockCompany(id);
   }
   async unblockCompany(id: string): Promise<void> {
     await this.companyRepository.unblockCompany(id);
+  }
+
+  async completeProfile(companyId: string, profileData: CompanyProfileData): Promise<Company> {
+    const company = await this.companyRepository.updateCompanyProfile(companyId, { ...profileData, profileCompleted: true })
+    return company
   }
 
   async completeStep2(
@@ -260,5 +266,18 @@ export class CompanyService implements ICompanyService {
     } catch (error) {
       console.log("Invalid company refresh token during logout");
     }
-}
+  }
+
+  async getCompanyJobCount(companyId: string): Promise<number> {
+    try {
+      const response = await fetch(`http://localhost:3002/api/jobs/company/${companyId}/count`);
+      if (!response.ok) return 0;
+      
+      const data = await response.json() as { data: { count: number } };
+      return data.data?.count || 0;
+    } catch (error) {
+      console.error('Error getting job count:', error);
+      return 0;
+    }
+  }
 }

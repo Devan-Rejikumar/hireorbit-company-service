@@ -1,4 +1,4 @@
-import { CompanyResponse } from '../responses/company.response';
+import { CompanyDashboardResponse, CompanyProfileStepResponse, CompanyResponse } from '../responses/company.response';
 
 export function mapCompanyToResponse(company: {
   id: string;
@@ -78,4 +78,41 @@ export function mapCompaniesToResponse(companies: Array<{
   updatedAt: Date;
 }>): CompanyResponse[] {
   return companies.map(mapCompanyToResponse);
+}
+export function mapCompanyDashboardResponse(
+  company: {
+    id: string;
+    companyName: string;
+    email: string;
+    industry?: string;
+    size?: string;
+    website?: string;
+    description?: string;
+    foundedYear?: number;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    contactPersonName?: string;
+    contactPersonTitle?: string;
+    contactPersonEmail?: string;
+    contactPersonPhone?: string;
+    isVerified: boolean;
+    isBlocked: boolean;
+    profileCompleted: boolean;
+    rejectionReason?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }, 
+  profileStep: CompanyProfileStepResponse | null, 
+  jobCount: number, 
+  applicationCount: number
+): CompanyDashboardResponse {
+  return {
+    company: mapCompanyToResponse(company),
+    profileStep,
+    jobCount,
+    applicationCount
+  };
 }

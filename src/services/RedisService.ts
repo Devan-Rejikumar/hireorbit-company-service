@@ -53,4 +53,22 @@ export class RedisService {
     const key = `company_otp:${email}`;
     return await this.redis.ttl(key);
   }
+
+  async getCompanyJobCount(companyId: string): Promise<number> {
+    try {
+      const count = await this.redis.get(`company:${companyId}:jobCount`);
+      return count ? parseInt(count) : 0;
+    } catch (error) {
+      console.error('Error getting job count from Redis:', error);
+      return 0;
+    }
+  }
+  
+  async setCompanyJobCount(companyId: string, count: number): Promise<void> {
+    try {
+      await this.redis.set(`company:${companyId}:jobCount`, count.toString());
+    } catch (error) {
+      console.error('Error setting job count in Redis:', error);
+    }
+  }
 }

@@ -35,3 +35,16 @@ export interface CompanyAuthResponse {
 export interface CompanyProfileStepResponse {
   profileStep: string;
 }
+
+export interface JobCountResponse{
+  count: number;
+  companyId: string;
+}
+
+export interface CompanyDashboardResponse{
+  company: CompanyResponse;
+  profileStep: CompanyProfileStepResponse | null;
+  jobCount: number;
+  applicationCount: number;
+
+}

@@ -36,4 +36,5 @@ export interface ICompanyRepository extends IBaseRepository<Company> {
     reason: string,
     adminId: string
   ): Promise<Company>;
+
 }

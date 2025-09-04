@@ -10,6 +10,7 @@ const companyController = container.get<CompanyController>(TYPES.CompanyControll
 
 router.post('/register',(req,res)=> companyController.register(req,res));
 router.post('/login',(req,res)=>companyController.login(req,res));
+router.post('/refresh-token',(req,res)=>companyController.refreshToken(req,res))
 router.post('/generate-otp',(req,res)=>companyController.generateOTP(req,res));
 router.post('/verify-otp',(req,res)=>companyController.verifyOTP(req,res));
 router.post('/resend-otp',(req,res)=>companyController.resendOTP(req,res));
@@ -31,5 +32,6 @@ router.get("/admin/all", (req, res) => companyController.getAllCompaniesForAdmin
 router.get("/admin/:id", (req, res) => companyController.getCompanyDetailsForAdmin(req, res));
 router.post("/admin/:id/approve", (req, res) => companyController.approveCompany(req, res));
 router.post("/admin/:id/reject", (req, res) => companyController.rejectCompany(req, res));
+router.get("/job-count", (req, res) => companyController.getCompanyJobCount(req, res));
 
 export default router;

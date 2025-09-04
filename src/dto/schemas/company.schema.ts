@@ -27,6 +27,18 @@ export const CompanyProfileSchema = z.object({
   contactPersonPhone: z.string().max(20, 'Contact person phone too long').optional()
 });
 
+export const CompanyProfileCompletionSchema = z.object({
+  industry: z.string().min(1, 'Industry is required'),
+  size: z.string().min(1, 'Company size is required'),
+  website: z.string().url().optional(),
+  description: z.string().min(1, 'Description is required'),
+  headquarters: z.string().min(1, 'Headquarters is required'),
+  contactPersonName: z.string().min(1, 'Contact person name is required'),
+  contactPersonTitle: z.string().min(1, 'Contact person title is required'),
+  contactPersonEmail: z.string().email('Invalid contact person email'),
+  contactPersonPhone: z.string().min(1, 'Contact person phone is required')
+});
+
 export const CompanyGenerateOTPSchema = z.object({
   email: z.string().email('Invalid email format')
 });

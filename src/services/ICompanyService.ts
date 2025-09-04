@@ -29,4 +29,5 @@ export interface ICompanyService{
     approveCompany(companyId: string, adminId: string): Promise<Company>;
     rejectCompany(companyId: string, reason: string, adminId: string): Promise<Company>;
     logoutWithToken(refreshToken: string): Promise<void>;
+    getCompanyJobCount(companyId: string): Promise<number>;
 }
